@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: study-manager-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: study_manager_dev
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    container_name: study-manager-app
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # allowPublicKeyRetrieval=true is required for MySQL 8 caching_sha2_password
+      DB_URL: jdbc:mysql://db:3306/study_manager_dev?useSSL=false&serverTimezone=Europe/Riga&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+      DB_USER: root
+      DB_PASSWORD: root
+      JWT_SECRET: change-me-in-production-must-be-at-least-256-bits-long-secret-key
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
