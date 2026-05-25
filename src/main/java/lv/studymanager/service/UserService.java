@@ -51,6 +51,7 @@ public class UserService {
         r.setEmail(u.getEmail());
         r.setAvatarUrl(u.getAvatarUrl());
         r.setCreatedAt(u.getCreatedAt());
+        r.setRole(u.getRole().name());
         return r;
     }
 }

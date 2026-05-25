@@ -89,7 +89,7 @@ function showPage(name) {
       'dashboard','courses','tasks','profile','admin'
   ].indexOf(name)]?.classList.add('active');
 
-  const loaders = { dashboard: loadDashboard, courses: loadCourses, tasks: loadTasks, profile: loadProfile };
+  const loaders = { dashboard: loadDashboard, courses: loadCourses, tasks: loadTasks, profile: loadProfile, admin: loadAdmin };
   loaders[name]?.();
 }
 
