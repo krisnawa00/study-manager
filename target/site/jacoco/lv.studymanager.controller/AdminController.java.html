@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.controller</a> &gt; <span class="el_source">AdminController.java</span></div><h1>AdminController.java</h1><pre class="source lang-java linenums">package lv.studymanager.controller;
+
+import jakarta.validation.Valid;
+import lv.studymanager.dto.Dto.*;
+import lv.studymanager.service.AdminService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/admin&quot;)
+<span class="fc" id="L16">@RequiredArgsConstructor</span>
+@PreAuthorize(&quot;hasRole('ADMIN')&quot;)   // ← blocks non-admins on every method
+public class AdminController {
+
+    private final AdminService adminService;
+
+    @GetMapping(&quot;/stats&quot;)
+    public ResponseEntity&lt;AdminStatsResponse&gt; getPlatformStats() {
+<span class="fc" id="L24">        return ResponseEntity.ok(adminService.getPlatformStats());</span>
+    }
+
+    @GetMapping(&quot;/users&quot;)
+    public ResponseEntity&lt;List&lt;AdminUserResponse&gt;&gt; getAllUsers() {
+<span class="fc" id="L29">        return ResponseEntity.ok(adminService.getAllUsers());</span>
+    }
+
+    @GetMapping(&quot;/users/{id}&quot;)
+    public ResponseEntity&lt;AdminUserResponse&gt; getUser(
+            @PathVariable Long id) {
+<span class="nc" id="L35">        return ResponseEntity.ok(adminService.getUserById(id));</span>
+    }
+
+    @PatchMapping(&quot;/users/{id}/role&quot;)
+    public ResponseEntity&lt;AdminUserResponse&gt; changeRole(
+            @PathVariable Long id,
+            @Valid @RequestBody ChangeRoleRequest req) {
+<span class="fc" id="L42">        return ResponseEntity.ok(adminService.changeRole(id, req));</span>
+    }
+
+    @DeleteMapping(&quot;/users/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; deleteUser(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails caller) {
+<span class="fc" id="L49">        adminService.deleteUser(id, caller.getUsername());</span>
+<span class="fc" id="L50">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CourseService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.service</a> &gt; <span class="el_source">CourseService.java</span></div><h1>CourseService.java</h1><pre class="source lang-java linenums">package lv.studymanager.service;
+
+import lv.studymanager.dto.Dto.*;
+import lv.studymanager.model.Course;
+import lv.studymanager.model.Task;
+import lv.studymanager.model.User;
+import lv.studymanager.repository.CourseRepository;
+import lv.studymanager.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+<span class="fc" id="L16">@RequiredArgsConstructor</span>
+public class CourseService {
+
+    private final CourseRepository courseRepository;
+    private final UserRepository userRepository;
+
+    public List&lt;CourseResponse&gt; getAllCourses(String email) {
+<span class="fc" id="L23">        Long userId = getUserId(email);</span>
+<span class="fc" id="L24">        return courseRepository.findByUserIdOrderByCreatedAtDesc(userId)</span>
+<span class="fc" id="L25">                .stream().map(this::toResponse).toList();</span>
+    }
+
+    @Transactional
+    public CourseResponse createCourse(String email, CourseRequest req) {
+<span class="fc" id="L30">        User user = findUser(email);</span>
+<span class="fc" id="L31">        Course course = Course.builder()</span>
+<span class="fc" id="L32">                .user(user)</span>
+<span class="fc" id="L33">                .name(req.getName())</span>
+<span class="fc" id="L34">                .instructor(req.getInstructor())</span>
+<span class="fc" id="L35">                .credits(req.getCredits())</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">                .color(req.getColor() != null ? req.getColor() : &quot;#2E75B6&quot;)</span>
+<span class="fc" id="L37">                .description(req.getDescription())</span>
+<span class="fc" id="L38">                .status(parseStatus(req.getStatus(), Course.Status.ACTIVE))</span>
+<span class="fc" id="L39">                .category(parseCategory(req.getCategory(), Course.Category.MANDATORY))</span>
+<span class="fc" id="L40">                .build();</span>
+<span class="fc" id="L41">        return toResponse(courseRepository.save(course));</span>
+    }
+
+    @Transactional
+    public CourseResponse updateCourse(String email, Long id, CourseRequest req) {
+<span class="fc" id="L46">        Course course = findCourse(id, getUserId(email));</span>
+<span class="fc" id="L47">        course.setName(req.getName());</span>
+<span class="fc" id="L48">        course.setInstructor(req.getInstructor());</span>
+<span class="fc" id="L49">        course.setCredits(req.getCredits());</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if (req.getColor() != null) course.setColor(req.getColor());</span>
+<span class="fc" id="L51">        course.setDescription(req.getDescription());</span>
+<span class="fc" id="L52">        course.setStatus(parseStatus(req.getStatus(), course.getStatus()));</span>
+<span class="fc" id="L53">        course.setCategory(parseCategory(req.getCategory(), course.getCategory()));</span>
+<span class="fc" id="L54">        return toResponse(courseRepository.save(course));</span>
+    }
+
+    @Transactional
+    public void deleteCourse(String email, Long id) {
+<span class="fc" id="L59">        Course course = findCourse(id, getUserId(email));</span>
+<span class="fc" id="L60">        courseRepository.delete(course);</span>
+<span class="fc" id="L61">    }</span>
+
+    public CourseResponse getCourse(String email, Long id) {
+<span class="fc" id="L64">        return toResponse(findCourse(id, getUserId(email)));</span>
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private CourseResponse toResponse(Course c) {
+<span class="fc" id="L70">        CourseResponse r = new CourseResponse();</span>
+<span class="fc" id="L71">        r.setId(c.getId());</span>
+<span class="fc" id="L72">        r.setName(c.getName());</span>
+<span class="fc" id="L73">        r.setInstructor(c.getInstructor());</span>
+<span class="fc" id="L74">        r.setCredits(c.getCredits());</span>
+<span class="fc" id="L75">        r.setColor(c.getColor());</span>
+<span class="fc" id="L76">        r.setStatus(c.getStatus().name());</span>
+<span class="fc" id="L77">        r.setCategory(c.getCategory().name());</span>
+<span class="fc" id="L78">        r.setDescription(c.getDescription());</span>
+<span class="fc" id="L79">        r.setTotalTasks(c.getTasks().size());</span>
+<span class="pc bnc" id="L80" title="All 2 branches missed.">        long done = c.getTasks().stream().filter(t -&gt; t.getStatus() == Task.Status.DONE).count();</span>
+<span class="fc" id="L81">        r.setDoneTasks((int) done);</span>
+<span class="fc" id="L82">        r.setCompletionPercent(c.getCompletionPercent());</span>
+<span class="fc" id="L83">        return r;</span>
+    }
+
+    private Course findCourse(Long id, Long userId) {
+<span class="fc" id="L87">        return courseRepository.findByIdAndUserId(id, userId)</span>
+<span class="fc" id="L88">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Kurss nav atrasts: &quot; + id));</span>
+    }
+
+    private User findUser(String email) {
+<span class="fc" id="L92">        return userRepository.findByEmail(email)</span>
+<span class="pc" id="L93">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Lietotājs nav atrasts&quot;));</span>
+    }
+
+    private Long getUserId(String email) {
+<span class="fc" id="L97">        return findUser(email).getId();</span>
+    }
+
+    private Course.Status parseStatus(String s, Course.Status fallback) {
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        try { return s != null ? Course.Status.valueOf(s) : fallback; }</span>
+<span class="nc" id="L102">        catch (IllegalArgumentException e) { return fallback; }</span>
+    }
+
+    private Course.Category parseCategory(String s, Course.Category fallback) {
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        try { return s != null ? Course.Category.valueOf(s) : fallback; }</span>
+<span class="nc" id="L107">        catch (IllegalArgumentException e) { return fallback; }</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

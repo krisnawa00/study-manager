@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AchievementService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.service</a> &gt; <span class="el_source">AchievementService.java</span></div><h1>AchievementService.java</h1><pre class="source lang-java linenums">package lv.studymanager.service;
+
+import lv.studymanager.model.Achievement;
+import lv.studymanager.model.Achievement.BadgeType;
+import lv.studymanager.model.User;
+import lv.studymanager.repository.AchievementRepository;
+import lv.studymanager.repository.TaskRepository;
+import lv.studymanager.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+<span class="fc" id="L17">@RequiredArgsConstructor</span>
+<span class="fc" id="L18">@Slf4j</span>
+public class AchievementService {
+
+    private final AchievementRepository achievementRepository;
+    private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
+
+    public List&lt;Achievement&gt; getAchievements(String email) {
+<span class="fc" id="L26">        Long userId = userRepository.findByEmail(email)</span>
+<span class="fc" id="L27">                .orElseThrow().getId();</span>
+<span class="fc" id="L28">        return achievementRepository.findByUserIdOrderByEarnedAtDesc(userId);</span>
+    }
+
+    @Transactional
+    public void checkAndAwardAchievements(Long userId) {
+<span class="fc" id="L33">        int totalTasks = taskRepository.countAllByUserId(userId);</span>
+<span class="fc" id="L34">        int doneTasks  = taskRepository.countDoneByUserId(userId);</span>
+
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">        award(userId, BadgeType.FIRST_TASK,  totalTasks &gt;= 1);</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        award(userId, BadgeType.CENTURY,     totalTasks &gt;= 100);</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        award(userId, BadgeType.EARLY_BIRD,  doneTasks  &gt;= 1);  // refined in real logic</span>
+<span class="fc" id="L39">    }</span>
+
+    private void award(Long userId, BadgeType type, boolean condition) {
+<span class="fc bfc" id="L42" title="All 4 branches covered.">        if (condition &amp;&amp; !achievementRepository.existsByUserIdAndBadgeType(userId, type)) {</span>
+<span class="fc" id="L43">            User user = userRepository.getReferenceById(userId);</span>
+<span class="fc" id="L44">            Achievement a = Achievement.builder()</span>
+<span class="fc" id="L45">                    .user(user)</span>
+<span class="fc" id="L46">                    .badgeType(type)</span>
+<span class="fc" id="L47">                    .description(type.getDescription())</span>
+<span class="fc" id="L48">                    .build();</span>
+<span class="fc" id="L49">            achievementRepository.save(a);</span>
+<span class="fc" id="L50">            log.info(&quot;Achievement awarded: {} → {}&quot;, userId, type);</span>
+        }
+<span class="fc" id="L52">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

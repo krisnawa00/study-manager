@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Task.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.model</a> &gt; <span class="el_source">Task.java</span></div><h1>Task.java</h1><pre class="source lang-java linenums">package lv.studymanager.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = &quot;tasks&quot;)
+<span class="pc bfc" id="L14" title="All 6 branches covered.">@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder</span>
+public class Task {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+<span class="fc" id="L19">    private Long id;</span>
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;user_id&quot;, nullable = false)
+<span class="nc" id="L23">    private User user;</span>
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;course_id&quot;)
+<span class="fc" id="L27">    private Course course;</span>
+
+    @NotBlank
+    @Column(nullable = false, length = 300)
+<span class="fc" id="L31">    private String title;</span>
+
+    @Column(columnDefinition = &quot;TEXT&quot;)
+<span class="fc" id="L34">    private String description;</span>
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+<span class="fc" id="L39">    private Priority priority = Priority.MEDIUM;</span>
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+<span class="fc" id="L44">    private Status status = Status.TODO;</span>
+
+    @Column
+<span class="fc" id="L47">    private LocalDate dueDate;</span>
+
+    @Column
+    @Builder.Default
+<span class="nc" id="L51">    private boolean recurring = false;</span>
+
+    @Column(length = 50)
+<span class="nc" id="L54">    private String recurrencePattern; // e.g. &quot;WEEKLY&quot;, &quot;BIWEEKLY&quot;</span>
+
+    @CreationTimestamp
+<span class="fc" id="L57">    private LocalDateTime createdAt;</span>
+
+    @UpdateTimestamp
+<span class="nc" id="L60">    private LocalDateTime updatedAt;</span>
+
+<span class="fc" id="L62">    public enum Priority {</span>
+<span class="fc" id="L63">        LOW, MEDIUM, HIGH, CRITICAL</span>
+    }
+
+<span class="fc" id="L66">    public enum Status {</span>
+<span class="fc" id="L67">        TODO, IN_PROGRESS, DONE</span>
+    }
+
+    public boolean isOverdue() {
+<span class="fc bfc" id="L71" title="All 4 branches covered.">        return dueDate != null</span>
+            &amp;&amp; status != Status.DONE
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            &amp;&amp; dueDate.isBefore(LocalDate.now());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

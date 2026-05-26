@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.service</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package lv.studymanager.service;
+
+import lv.studymanager.dto.Dto.*;
+import lv.studymanager.model.User;
+import lv.studymanager.repository.UserRepository;
+import lv.studymanager.security.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+<span class="fc" id="L16">@RequiredArgsConstructor</span>
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
+    private final AuthenticationManager authManager;
+
+    @Transactional
+    public AuthResponse register(RegisterRequest req) {
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if (userRepository.existsByEmail(req.getEmail())) {</span>
+<span class="fc" id="L27">            throw new IllegalArgumentException(&quot;E-pasts jau reģistrēts: &quot; + req.getEmail());</span>
+        }
+<span class="fc" id="L29">        User user = User.builder()</span>
+<span class="fc" id="L30">                .firstName(req.getFirstName())</span>
+<span class="fc" id="L31">                .lastName(req.getLastName())</span>
+<span class="fc" id="L32">                .email(req.getEmail())</span>
+<span class="fc" id="L33">                .passwordHash(passwordEncoder.encode(req.getPassword()))</span>
+<span class="fc" id="L34">                .build();</span>
+<span class="fc" id="L35">        userRepository.save(user);</span>
+
+<span class="fc" id="L37">        String access  = tokenProvider.generateAccessToken(user.getEmail());</span>
+<span class="fc" id="L38">        String refresh = tokenProvider.generateRefreshToken(user.getEmail());</span>
+<span class="fc" id="L39">        return new AuthResponse(access, refresh, toUserResponse(user));</span>
+    }
+
+    public AuthResponse login(LoginRequest req) {
+<span class="fc" id="L43">        Authentication auth = authManager.authenticate(</span>
+<span class="fc" id="L44">                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));</span>
+<span class="fc" id="L45">        User user = userRepository.findByEmail(req.getEmail()).orElseThrow();</span>
+<span class="fc" id="L46">        String access  = tokenProvider.generateAccessToken(auth);</span>
+<span class="fc" id="L47">        String refresh = tokenProvider.generateRefreshToken(user.getEmail());</span>
+<span class="fc" id="L48">        return new AuthResponse(access, refresh, toUserResponse(user));</span>
+    }
+
+    public AuthResponse refresh(String refreshToken) {
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (!tokenProvider.validateToken(refreshToken)) {</span>
+<span class="fc" id="L53">            throw new IllegalArgumentException(&quot;Nederīgs refresh token&quot;);</span>
+        }
+<span class="fc" id="L55">        String email = tokenProvider.getEmailFromToken(refreshToken);</span>
+<span class="fc" id="L56">        User user = userRepository.findByEmail(email).orElseThrow();</span>
+<span class="fc" id="L57">        String newAccess  = tokenProvider.generateAccessToken(email);</span>
+<span class="fc" id="L58">        String newRefresh = tokenProvider.generateRefreshToken(email);</span>
+<span class="fc" id="L59">        return new AuthResponse(newAccess, newRefresh, toUserResponse(user));</span>
+    }
+
+    private UserResponse toUserResponse(User u) {
+<span class="fc" id="L63">        UserResponse r = new UserResponse();</span>
+<span class="fc" id="L64">        r.setId(u.getId());</span>
+<span class="fc" id="L65">        r.setFirstName(u.getFirstName());</span>
+<span class="fc" id="L66">        r.setLastName(u.getLastName());</span>
+<span class="fc" id="L67">        r.setEmail(u.getEmail());</span>
+<span class="fc" id="L68">        r.setAvatarUrl(u.getAvatarUrl());</span>
+<span class="fc" id="L69">        r.setRole(u.getRole().name());</span>
+<span class="fc" id="L70">        r.setCreatedAt(u.getCreatedAt());</span>
+<span class="fc" id="L71">        return r;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

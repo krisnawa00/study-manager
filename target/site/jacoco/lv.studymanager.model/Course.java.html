@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Course.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.model</a> &gt; <span class="el_source">Course.java</span></div><h1>Course.java</h1><pre class="source lang-java linenums">package lv.studymanager.model;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = &quot;courses&quot;)
+<span class="pc bfc" id="L14" title="All 8 branches covered.">@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder</span>
+public class Course {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+<span class="fc" id="L19">    private Long id;</span>
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;user_id&quot;, nullable = false)
+<span class="nc" id="L23">    private User user;</span>
+
+    @NotBlank
+    @Column(nullable = false, length = 200)
+<span class="fc" id="L27">    private String name;</span>
+
+    @Column(length = 200)
+<span class="fc" id="L30">    private String instructor;</span>
+
+    @Column
+<span class="fc" id="L33">    private Integer credits;</span>
+
+    @Column(length = 7)
+    @Builder.Default
+<span class="fc" id="L37">    private String color = &quot;#2E75B6&quot;;</span>
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+<span class="fc" id="L42">    private Status status = Status.ACTIVE;</span>
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+<span class="fc" id="L47">    private Category category = Category.MANDATORY;</span>
+
+    @Column(columnDefinition = &quot;TEXT&quot;)
+<span class="fc" id="L50">    private String description;</span>
+
+    @CreationTimestamp
+<span class="nc" id="L53">    private LocalDateTime createdAt;</span>
+
+    @OneToMany(mappedBy = &quot;course&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+<span class="fc" id="L57">    private List&lt;Task&gt; tasks = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L59">    public enum Status {</span>
+<span class="fc" id="L60">        ACTIVE, COMPLETED, FROZEN</span>
+    }
+
+<span class="fc" id="L63">    public enum Category {</span>
+<span class="fc" id="L64">        MANDATORY, ELECTIVE, EXTRA</span>
+    }
+
+    public double getCompletionPercent() {
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (tasks.isEmpty()) return 0.0;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        long done = tasks.stream().filter(t -&gt; t.getStatus() == Task.Status.DONE).count();</span>
+<span class="fc" id="L70">        return (double) done / tasks.size() * 100.0;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

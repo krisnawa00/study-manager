@@ -22,9 +22,30 @@
     <properties>
         <java.version>21</java.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <sonar.projectKey>study-manager</sonar.projectKey>
+		<sonar.host.url>http://localhost:9000</sonar.host.url>
+		<sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar.exclusions>
+    src/main/java/lv/studymanager/dto/Dto.java,
+    src/main/java/lv/studymanager/config/SecurityConfig.java,
+    src/main/java/lv/studymanager/StudyManagerApplication.java,
+    src/main/resources/static/**
+</sonar.exclusions>
+<sonar.coverage.exclusions>
+    src/main/java/lv/studymanager/dto/Dto.java,
+    src/main/java/lv/studymanager/config/SecurityConfig.java,
+    src/main/java/lv/studymanager/StudyManagerApplication.java,
+    src/main/resources/static/**
+</sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
+    
+    <dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
         <!-- Spring Boot Core -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -110,6 +131,22 @@
                     </excludes>
                 </configuration>
             </plugin>
+            
+            <plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.11</version>
+    <executions>
+        <execution>
+            <goals><goal>prepare-agent</goal></goals>
+        </execution>
+        <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals><goal>report</goal></goals>
+        </execution>
+    </executions>
+</plugin>
         </plugins>
     </build>
 

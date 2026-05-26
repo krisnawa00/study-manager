@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.service</a> &gt; <span class="el_source">TaskService.java</span></div><h1>TaskService.java</h1><pre class="source lang-java linenums">package lv.studymanager.service;
+
+import lv.studymanager.dto.Dto.*;
+import lv.studymanager.model.Course;
+import lv.studymanager.model.Task;
+import lv.studymanager.model.User;
+import lv.studymanager.repository.CourseRepository;
+import lv.studymanager.repository.TaskRepository;
+import lv.studymanager.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+
+@Service
+<span class="fc" id="L18">@RequiredArgsConstructor</span>
+public class TaskService {
+
+    private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
+    private final AchievementService achievementService;
+
+    public List&lt;TaskResponse&gt; getAllTasks(String email) {
+<span class="fc" id="L27">        return taskRepository.findByUserIdOrderByDueDateAscPriorityDesc(getUserId(email))</span>
+<span class="fc" id="L28">                .stream().map(this::toResponse).toList();</span>
+    }
+
+    public List&lt;TaskResponse&gt; getTasksByCourse(String email, Long courseId) {
+<span class="nc" id="L32">        return taskRepository.findByUserIdAndCourseId(getUserId(email), courseId)</span>
+<span class="nc" id="L33">                .stream().map(this::toResponse).toList();</span>
+    }
+
+    public List&lt;TaskResponse&gt; getDueToday(String email) {
+<span class="fc" id="L37">        return taskRepository.findDueTodayByUserId(getUserId(email), LocalDate.now())</span>
+<span class="fc" id="L38">                .stream().map(this::toResponse).toList();</span>
+    }
+
+    public List&lt;TaskResponse&gt; getOverdue(String email) {
+<span class="fc" id="L42">        return taskRepository.findOverdueByUserId(getUserId(email), LocalDate.now())</span>
+<span class="fc" id="L43">                .stream().map(this::toResponse).toList();</span>
+    }
+
+    @Transactional
+    public TaskResponse createTask(String email, TaskRequest req) {
+<span class="fc" id="L48">        User user = findUser(email);</span>
+<span class="fc" id="L49">        Course course = null;</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (req.getCourseId() != null) {</span>
+<span class="fc" id="L51">            course = courseRepository.findByIdAndUserId(req.getCourseId(), user.getId())</span>
+<span class="fc" id="L52">                    .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Kurss nav atrasts&quot;));</span>
+        }
+<span class="fc" id="L54">        Task task = Task.builder()</span>
+<span class="fc" id="L55">                .user(user)</span>
+<span class="fc" id="L56">                .course(course)</span>
+<span class="fc" id="L57">                .title(req.getTitle())</span>
+<span class="fc" id="L58">                .description(req.getDescription())</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">                .priority(req.getPriority() != null ? req.getPriority() : Task.Priority.MEDIUM)</span>
+<span class="fc" id="L60">                .dueDate(req.getDueDate())</span>
+<span class="fc" id="L61">                .recurring(req.isRecurring())</span>
+<span class="fc" id="L62">                .recurrencePattern(req.getRecurrencePattern())</span>
+<span class="fc" id="L63">                .build();</span>
+<span class="fc" id="L64">        Task saved = taskRepository.save(task);</span>
+<span class="fc" id="L65">        achievementService.checkAndAwardAchievements(user.getId());</span>
+<span class="fc" id="L66">        return toResponse(saved);</span>
+    }
+
+    @Transactional
+    public TaskResponse updateTask(String email, Long id, TaskRequest req) {
+<span class="nc" id="L71">        Task task = findTask(id, getUserId(email));</span>
+<span class="nc" id="L72">        task.setTitle(req.getTitle());</span>
+<span class="nc" id="L73">        task.setDescription(req.getDescription());</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (req.getPriority() != null) task.setPriority(req.getPriority());</span>
+<span class="nc" id="L75">        task.setDueDate(req.getDueDate());</span>
+<span class="nc" id="L76">        task.setRecurring(req.isRecurring());</span>
+<span class="nc" id="L77">        task.setRecurrencePattern(req.getRecurrencePattern());</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        if (req.getCourseId() != null) {</span>
+<span class="nc" id="L79">            Course course = courseRepository.findByIdAndUserId(req.getCourseId(), getUserId(email))</span>
+<span class="nc" id="L80">                    .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Kurss nav atrasts&quot;));</span>
+<span class="nc" id="L81">            task.setCourse(course);</span>
+        }
+<span class="nc" id="L83">        return toResponse(taskRepository.save(task));</span>
+    }
+
+    @Transactional
+    public TaskResponse updateStatus(String email, Long id, Task.Status newStatus) {
+<span class="fc" id="L88">        Task task = findTask(id, getUserId(email));</span>
+<span class="fc" id="L89">        task.setStatus(newStatus);</span>
+<span class="fc" id="L90">        Task saved = taskRepository.save(task);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (newStatus == Task.Status.DONE) {</span>
+<span class="fc" id="L92">            achievementService.checkAndAwardAchievements(getUserId(email));</span>
+        }
+<span class="fc" id="L94">        return toResponse(saved);</span>
+    }
+
+    @Transactional
+    public void deleteTask(String email, Long id) {
+<span class="fc" id="L99">        taskRepository.delete(findTask(id, getUserId(email)));</span>
+<span class="fc" id="L100">    }</span>
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    private TaskResponse toResponse(Task t) {
+<span class="fc" id="L105">        TaskResponse r = new TaskResponse();</span>
+<span class="fc" id="L106">        r.setId(t.getId());</span>
+<span class="fc" id="L107">        r.setTitle(t.getTitle());</span>
+<span class="fc" id="L108">        r.setDescription(t.getDescription());</span>
+<span class="fc" id="L109">        r.setPriority(t.getPriority());</span>
+<span class="fc" id="L110">        r.setStatus(t.getStatus());</span>
+<span class="fc" id="L111">        r.setDueDate(t.getDueDate());</span>
+<span class="fc" id="L112">        r.setOverdue(t.isOverdue());</span>
+<span class="fc" id="L113">        r.setCreatedAt(t.getCreatedAt());</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        if (t.getCourse() != null) {</span>
+<span class="fc" id="L115">            r.setCourseId(t.getCourse().getId());</span>
+<span class="fc" id="L116">            r.setCourseName(t.getCourse().getName());</span>
+<span class="fc" id="L117">            r.setCourseColor(t.getCourse().getColor());</span>
+        }
+<span class="fc" id="L119">        return r;</span>
+    }
+
+    private Task findTask(Long id, Long userId) {
+<span class="fc" id="L123">        return taskRepository.findByIdAndUserId(id, userId)</span>
+<span class="fc" id="L124">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Uzdevums nav atrasts: &quot; + id));</span>
+    }
+
+    private User findUser(String email) {
+<span class="fc" id="L128">        return userRepository.findByEmail(email)</span>
+<span class="pc" id="L129">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Lietotājs nav atrasts&quot;));</span>
+    }
+
+    private Long getUserId(String email) {
+<span class="fc" id="L133">        return findUser(email).getId();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TaskController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">StudyManager PWA</a> &gt; <a href="index.source.html" class="el_package">lv.studymanager.controller</a> &gt; <span class="el_source">TaskController.java</span></div><h1>TaskController.java</h1><pre class="source lang-java linenums">package lv.studymanager.controller;
+
+import jakarta.validation.Valid;
+import lv.studymanager.dto.Dto.*;
+import lv.studymanager.model.Task;
+import lv.studymanager.service.TaskService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping(&quot;/api/tasks&quot;)
+<span class="fc" id="L18">@RequiredArgsConstructor</span>
+public class TaskController {
+
+    private final TaskService taskService;
+
+    @GetMapping
+    public ResponseEntity&lt;List&lt;TaskResponse&gt;&gt; getAll(
+            @AuthenticationPrincipal UserDetails user,
+            @RequestParam(required = false) Long courseId) {
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if (courseId != null) {</span>
+<span class="nc" id="L28">            return ResponseEntity.ok(taskService.getTasksByCourse(user.getUsername(), courseId));</span>
+        }
+<span class="fc" id="L30">        return ResponseEntity.ok(taskService.getAllTasks(user.getUsername()));</span>
+    }
+
+    @GetMapping(&quot;/due-today&quot;)
+    public ResponseEntity&lt;List&lt;TaskResponse&gt;&gt; dueToday(@AuthenticationPrincipal UserDetails user) {
+<span class="fc" id="L35">        return ResponseEntity.ok(taskService.getDueToday(user.getUsername()));</span>
+    }
+
+    @GetMapping(&quot;/overdue&quot;)
+    public ResponseEntity&lt;List&lt;TaskResponse&gt;&gt; overdue(@AuthenticationPrincipal UserDetails user) {
+<span class="fc" id="L40">        return ResponseEntity.ok(taskService.getOverdue(user.getUsername()));</span>
+    }
+
+    @PostMapping
+    public ResponseEntity&lt;TaskResponse&gt; create(@AuthenticationPrincipal UserDetails user,
+                                                @Valid @RequestBody TaskRequest req) {
+<span class="fc" id="L46">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L47">                .body(taskService.createTask(user.getUsername(), req));</span>
+    }
+
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;TaskResponse&gt; update(@AuthenticationPrincipal UserDetails user,
+                                                @PathVariable Long id,
+                                                @Valid @RequestBody TaskRequest req) {
+<span class="nc" id="L54">        return ResponseEntity.ok(taskService.updateTask(user.getUsername(), id, req));</span>
+    }
+
+    @PatchMapping(&quot;/{id}/status&quot;)
+    public ResponseEntity&lt;TaskResponse&gt; updateStatus(@AuthenticationPrincipal UserDetails user,
+                                                      @PathVariable Long id,
+                                                      @RequestBody StatusUpdateRequest req) {
+<span class="fc" id="L61">        return ResponseEntity.ok(taskService.updateStatus(user.getUsername(), id, req.getStatus()));</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; delete(@AuthenticationPrincipal UserDetails user,
+                                        @PathVariable Long id) {
+<span class="fc" id="L67">        taskService.deleteTask(user.getUsername(), id);</span>
+<span class="fc" id="L68">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
